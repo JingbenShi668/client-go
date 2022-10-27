@@ -21,8 +21,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+//Lister列出所有资源
 // Lister helps list resources.
-type Lister interface {
+type Lister interface { //接口
 	// List lists all resources in the indexer.
 	List(selector labels.Selector) (ret []*unstructured.Unstructured, err error)
 	// Get retrieves a resource from the indexer with the given name
@@ -32,7 +33,7 @@ type Lister interface {
 }
 
 // NamespaceLister helps list and get resources.
-type NamespaceLister interface {
+type NamespaceLister interface { //接口
 	// List lists all resources in the indexer for a given namespace.
 	List(selector labels.Selector) (ret []*unstructured.Unstructured, err error)
 	// Get retrieves a resource from the indexer for a given namespace and name.

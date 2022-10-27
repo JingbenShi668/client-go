@@ -62,6 +62,7 @@ func ExtractDaemonSet(daemonSet *apiappsv1.DaemonSet, fieldManager string) (*Dae
 	return extractDaemonSet(daemonSet, fieldManager, "")
 }
 
+//提取applied configuration对应的子资源的状态
 // ExtractDaemonSetStatus is the same as ExtractDaemonSet except
 // that it extracts the status subresource applied configuration.
 // Experimental!

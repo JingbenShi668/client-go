@@ -30,6 +30,7 @@ type Interface interface {
 	Resource(resource schema.GroupVersionResource) NamespaceableResourceInterface
 }
 
+//resource interface
 type ResourceInterface interface {
 	Create(ctx context.Context, obj *unstructured.Unstructured, options metav1.CreateOptions, subresources ...string) (*unstructured.Unstructured, error)
 	Update(ctx context.Context, obj *unstructured.Unstructured, options metav1.UpdateOptions, subresources ...string) (*unstructured.Unstructured, error)
