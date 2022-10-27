@@ -248,6 +248,7 @@ func TestDynamicSharedInformerFactory(t *testing.T) {
 	}
 }
 
+//构建新的unstructured结构对象
 func newUnstructured(apiVersion, kind, namespace, name string) *unstructured.Unstructured {
 	return &unstructured.Unstructured{
 		Object: map[string]interface{}{

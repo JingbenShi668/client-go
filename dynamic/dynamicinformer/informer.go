@@ -97,6 +97,7 @@ func (f *dynamicSharedInformerFactory) Start(stopCh <-chan struct{}) {
 	}
 }
 
+//WaitForCacheSync等待所有started informers的缓存被同步
 // WaitForCacheSync waits for all started informers' cache were synced.
 func (f *dynamicSharedInformerFactory) WaitForCacheSync(stopCh <-chan struct{}) map[schema.GroupVersionResource]bool {
 	informers := func() map[schema.GroupVersionResource]cache.SharedIndexInformer {
@@ -119,6 +120,7 @@ func (f *dynamicSharedInformerFactory) WaitForCacheSync(stopCh <-chan struct{}) 
 	return res
 }
 
+//为dynamic type构建一个新的informer
 // NewFilteredDynamicInformer constructs a new informer for a dynamic type.
 func NewFilteredDynamicInformer(client dynamic.Interface, gvr schema.GroupVersionResource, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions TweakListOptionsFunc) informers.GenericInformer {
 	return &dynamicInformer{

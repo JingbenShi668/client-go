@@ -22,6 +22,7 @@ import (
 	"k8s.io/client-go/informers"
 )
 
+//针对dynamic client共享的informer和lister
 // DynamicSharedInformerFactory provides access to a shared informer and lister for dynamic client
 type DynamicSharedInformerFactory interface {
 	Start(stopCh <-chan struct{})
