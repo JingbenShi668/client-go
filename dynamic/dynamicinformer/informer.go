@@ -37,6 +37,7 @@ func NewDynamicSharedInformerFactory(client dynamic.Interface, defaultResync tim
 	return NewFilteredDynamicSharedInformerFactory(client, defaultResync, metav1.NamespaceAll, nil)
 }
 
+//构建dynamicSharedInformerFactory instance
 // NewFilteredDynamicSharedInformerFactory constructs a new instance of dynamicSharedInformerFactory.
 // Listers obtained via this factory will be subject to the same filters as specified here.
 func NewFilteredDynamicSharedInformerFactory(client dynamic.Interface, defaultResync time.Duration, namespace string, tweakListOptions TweakListOptionsFunc) DynamicSharedInformerFactory {
@@ -50,6 +51,7 @@ func NewFilteredDynamicSharedInformerFactory(client dynamic.Interface, defaultRe
 	}
 }
 
+//dynamicSharedInformerFactory struct
 type dynamicSharedInformerFactory struct {
 	client        dynamic.Interface
 	defaultResync time.Duration
@@ -81,6 +83,7 @@ func (f *dynamicSharedInformerFactory) ForResource(gvr schema.GroupVersionResour
 	return informer
 }
 
+//初始化全部requested informers
 // Start initializes all requested informers.
 func (f *dynamicSharedInformerFactory) Start(stopCh <-chan struct{}) {
 	f.lock.Lock()
