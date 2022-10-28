@@ -31,7 +31,7 @@ type endpointsLock struct {
 	// EndpointsMeta should contain a Name and a Namespace of an
 	// Endpoints object that the LeaderElector will attempt to lead.
 	EndpointsMeta metav1.ObjectMeta
-	Client        corev1client.EndpointsGetter
+	Client        corev1client.EndpointsGetter //访问api-server的client
 	LockConfig    ResourceLockConfig
 	e             *v1.Endpoints
 }

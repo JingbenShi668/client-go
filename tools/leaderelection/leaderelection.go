@@ -65,8 +65,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	rl "k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/utils/clock"
-
-	"k8s.io/klog/v2"
 )
 
 const (
@@ -140,7 +138,7 @@ type LeaderElectionConfig struct {
 
 	// Callbacks are callbacks that are triggered during certain lifecycle
 	// events of the LeaderElector
-	Callbacks LeaderCallbacks
+	Callbacks LeaderCallbacks //需要用户配置的回调函数
 
 	// WatchDog is the associated health checker
 	// WatchDog may be null if it's not needed/configured.
@@ -173,11 +171,12 @@ type LeaderCallbacks struct {
 	OnNewLeader func(identity string)
 }
 
+//LeaderElector是一个竞争资源的实体
 // LeaderElector is a leader election client.
 type LeaderElector struct {
-	config LeaderElectionConfig
+	config LeaderElectionConfig //配置当前client
 	// internal bookkeeping
-	observedRecord    rl.LeaderElectionRecord
+	observedRecord    rl.LeaderElectionRecord //想要获取的资源
 	observedRawRecord []byte
 	observedTime      time.Time
 	// used to implement OnNewLeader(), may lag slightly from the
@@ -194,6 +193,7 @@ type LeaderElector struct {
 	metrics leaderMetricsAdapter
 }
 
+//
 // Run starts the leader election loop. Run will not return
 // before leader election loop is stopped by ctx or it has
 // stopped holding the leader lease
@@ -203,13 +203,15 @@ func (le *LeaderElector) Run(ctx context.Context) {
 		le.config.Callbacks.OnStoppedLeading()
 	}()
 
+	//该client获取资源失败，则ctx signalled done
 	if !le.acquire(ctx) {
 		return // ctx signalled done
 	}
+	//该client成功，成为leader
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	go le.config.Callbacks.OnStartedLeading(ctx)
-	le.renew(ctx)
+	le.renew(ctx) //续约leadership
 }
 
 // RunOrDie starts a client with the provided config or panics if the config
@@ -233,6 +235,7 @@ func (le *LeaderElector) GetLeader() string {
 	return le.getObservedRecord().HolderIdentity
 }
 
+//判断当前client是不是leader
 // IsLeader returns true if the last observed leader was this client else returns false.
 func (le *LeaderElector) IsLeader() bool {
 	return le.getObservedRecord().HolderIdentity == le.config.Lock.Identity()
@@ -373,11 +376,12 @@ func (le *LeaderElector) tryAcquireOrRenew(ctx context.Context) bool {
 }
 
 func (le *LeaderElector) maybeReportTransition() {
+	//leader没有发生变化
 	if le.observedRecord.HolderIdentity == le.reportedLeader {
 		return
 	}
-	le.reportedLeader = le.observedRecord.HolderIdentity
-	if le.config.Callbacks.OnNewLeader != nil {
+	le.reportedLeader = le.observedRecord.HolderIdentity //使用最新的leader的id更新reportedLeader
+	if le.config.Callbacks.OnNewLeader != nil { //使用回调函数报告新的leader产生
 		go le.config.Callbacks.OnNewLeader(le.reportedLeader)
 	}
 }

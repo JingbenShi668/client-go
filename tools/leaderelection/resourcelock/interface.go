@@ -104,6 +104,7 @@ const (
 	ConfigMapsLeasesResourceLock = "configmapsleases"
 )
 
+//
 // LeaderElectionRecord is the record that is stored in the leader election annotation.
 // This information should be used for observational purposes only and could be replaced
 // with a random string (e.g. UUID) with only slight modification of this code.
@@ -114,8 +115,9 @@ type LeaderElectionRecord struct {
 	// attempt to acquire leases with empty identities and will wait for the full lease
 	// interval to expire before attempting to reacquire. This value is set to empty when
 	// a client voluntarily steps down.
+	//HolderIdentity即持有者的id, 也就是leader的id
 	HolderIdentity       string      `json:"holderIdentity"`
-	LeaseDurationSeconds int         `json:"leaseDurationSeconds"`
+	LeaseDurationSeconds int         `json:"leaseDurationSeconds"` //租约时长
 	AcquireTime          metav1.Time `json:"acquireTime"`
 	RenewTime            metav1.Time `json:"renewTime"`
 	LeaderTransitions    int         `json:"leaderTransitions"`
@@ -136,13 +138,15 @@ type ResourceLockConfig struct {
 	EventRecorder EventRecorder
 }
 
+//Interface用于leader election过程中arbitrary resources的锁定
+//该Interface有三个实现类，分别是EndpointLock、ConfigMapLock、LeaseLock，分别可以操作k8s中的endpoint, configmap和lease
 // Interface offers a common interface for locking on arbitrary
 // resources used in leader election.  The Interface is used
 // to hide the details on specific implementations in order to allow
 // them to change over time.  This interface is strictly for use
 // by the leaderelection code.
 type Interface interface {
-	// Get returns the LeaderElectionRecord
+	// Get returns the LeaderElectionRecord //返回当前LeaderElectionRecord信息
 	Get(ctx context.Context) (*LeaderElectionRecord, []byte, error)
 
 	// Create attempts to create a LeaderElectionRecord
