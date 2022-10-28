@@ -28,8 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/buffer"
 	"k8s.io/utils/clock"
-
-	"k8s.io/klog/v2"
 )
 
 // SharedInformer provides eventually consistent linkage of its
@@ -132,6 +130,7 @@ import (
 // state, except that its ResourceVersion is replaced with a
 // ResourceVersion in which the object is actually absent.
 type SharedInformer interface {
+	//添加一个event handler到shared informer
 	// AddEventHandler adds an event handler to the shared informer using the shared informer's resync
 	// period.  Events to a single handler are delivered sequentially, but there is no coordination
 	// between different handlers.
@@ -215,6 +214,7 @@ type SharedInformer interface {
 // `RemoveEventHandler` to unregister the handlers.
 type ResourceEventHandlerRegistration interface{}
 
+//SharedIndexInformer基于SharedInformer提供了add和get Indexers的能力
 // SharedIndexInformer provides add and get Indexers ability based on SharedInformer.
 type SharedIndexInformer interface {
 	SharedInformer
@@ -255,6 +255,7 @@ func NewSharedIndexInformer(lw ListerWatcher, exampleObject runtime.Object, defa
 	return sharedIndexInformer
 }
 
+//判断informer是否synced
 // InformerSynced is a function that can be used to determine if an informer has synced.  This is useful for determining if caches have synced.
 type InformerSynced func() bool
 
@@ -318,10 +319,12 @@ func WaitForCacheSync(stopCh <-chan struct{}, cacheSyncs ...InformerSynced) bool
 // sharedProcessor, which is responsible for relaying those
 // notifications to each of the informer's clients.
 type sharedIndexInformer struct {
-	indexer    Indexer
+	indexer    Indexer  //indexed local cache,本地缓存
+	//使用ListerWatcher去获取objects/notifications，并且将它们放到DeltaFIFO中
+	//DeltaFIFO的knownObjects是informer的本地缓存
 	controller Controller
 
-	processor             *sharedProcessor
+	processor             *sharedProcessor //传递informer's clients的notifications
 	cacheMutationDetector MutationDetector
 
 	listerWatcher ListerWatcher
@@ -332,9 +335,11 @@ type sharedIndexInformer struct {
 	// `"apiVersion"` and `"kind"` must also be right.
 	objectType runtime.Object
 
+	//resyncCheckPeriod是reflector的resync频率
 	// resyncCheckPeriod is how often we want the reflector's resync timer to fire so it can call
 	// shouldResync to check if any of our listeners need a resync.
 	resyncCheckPeriod time.Duration
+	//defaultEventHandlerResyncPeriod是reflector默认的resync period
 	// defaultEventHandlerResyncPeriod is the default resync period for any handlers added via
 	// AddEventHandler (i.e. they don't specify one and just want to use the shared informer's default
 	// value).
@@ -767,6 +772,7 @@ func (p *sharedProcessor) run(stopCh <-chan struct{}) {
 	p.wg.Wait() // Wait for all .pop() and .run() to stop
 }
 
+//shouldResync查询每个listener是否需要进行resync,这依赖于每个listener的resyncPeriod
 // shouldResync queries every listener to determine if any of them need a resync, based on each
 // listener's resyncPeriod.
 func (p *sharedProcessor) shouldResync() bool {

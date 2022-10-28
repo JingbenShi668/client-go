@@ -38,13 +38,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/pager"
-	"k8s.io/klog/v2"
 	"k8s.io/utils/clock"
 	"k8s.io/utils/trace"
 )
 
 const defaultExpectedTypeName = "<unspecified>"
 
+//
 // Reflector watches a specified resource and causes all changes to be reflected in the given store.
 type Reflector struct {
 	// name identifies this reflector. By default it will be a file:line if possible.
@@ -112,6 +112,7 @@ type ResourceVersionUpdater interface {
 	UpdateResourceVersion(resourceVersion string)
 }
 
+//只要ListAndWatch报出连接错误，WatchErrorHandler就会被调用，之后，informer就会backoff和retry
 // The WatchErrorHandler is called whenever ListAndWatch drops the
 // connection with an error. After calling this handler, the informer
 // will backoff and retry.
@@ -147,6 +148,7 @@ var (
 	minWatchTimeout = 5 * time.Minute
 )
 
+//NewNamespaceKeyedIndexerAndReflectorg创建Indexer和Reflector
 // NewNamespaceKeyedIndexerAndReflector creates an Indexer and a Reflector
 // The indexer is configured to key on namespace
 func NewNamespaceKeyedIndexerAndReflector(lw ListerWatcher, expectedType interface{}, resyncPeriod time.Duration) (indexer Indexer, reflector *Reflector) {
@@ -214,8 +216,10 @@ func (r *Reflector) setExpectedType(expectedType interface{}) {
 // call chains to NewReflector, so they'd be low entropy names for reflectors
 var internalPackages = []string{"client-go/tools/cache/"}
 
+//Run函数一直使用reflector的ListAndWatch去获取全部的objects和subsequent deltas
 // Run repeatedly uses the reflector's ListAndWatch to fetch all the
 // objects and subsequent deltas.
+//当stopCh关闭的时候，Run退出
 // Run will exit when stopCh is closed.
 func (r *Reflector) Run(stopCh <-chan struct{}) {
 	klog.V(3).Infof("Starting reflector %s (%s) from %s", r.expectedTypeName, r.resyncPeriod, r.name)

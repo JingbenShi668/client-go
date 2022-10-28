@@ -51,6 +51,7 @@ type ListFunc func(options metav1.ListOptions) (runtime.Object, error)
 // WatchFunc knows how to watch resources
 type WatchFunc func(options metav1.ListOptions) (watch.Interface, error)
 
+//ListWatch知道怎样list并且watch apiserver resources的set
 // ListWatch knows how to list and watch a set of apiserver resources.  It satisfies the ListerWatcher interface.
 // It is a convenience function for users of NewReflector, etc.
 // ListFunc and WatchFunc must not be nil
@@ -61,6 +62,7 @@ type ListWatch struct {
 	DisableChunking bool
 }
 
+//Getter接口使用了RESTClient的Get method
 // Getter interface knows how to access Get method from RESTClient.
 type Getter interface {
 	Get() *restclient.Request
@@ -101,7 +103,7 @@ func NewFilteredListWatchFromClient(c Getter, resource string, namespace string,
 
 // List a set of apiserver resources
 func (lw *ListWatch) List(options metav1.ListOptions) (runtime.Object, error) {
-	// ListWatch is used in Reflector, which already supports pagination.
+	// ListWatch is used in Reflector, which already supports pagination. //ListWatch用在Reflector中
 	// Don't paginate here to avoid duplication.
 	return lw.ListFunc(options)
 }

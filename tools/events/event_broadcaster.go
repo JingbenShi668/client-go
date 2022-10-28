@@ -41,7 +41,6 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/tools/record/util"
-	"k8s.io/klog/v2"
 	"k8s.io/utils/clock"
 )
 
@@ -107,6 +106,7 @@ func NewBroadcaster(sink EventSink) EventBroadcaster {
 	return newBroadcaster(sink, defaultSleepDuration, map[eventKey]*eventsv1.Event{})
 }
 
+//针对测试目的，创建新的event broadcaster
 // NewBroadcasterForTest Creates a new event broadcaster for test purposes.
 func newBroadcaster(sink EventSink, sleepDuration time.Duration, eventCache map[eventKey]*eventsv1.Event) EventBroadcaster {
 	return &eventBroadcasterImpl{
@@ -290,6 +290,7 @@ func getKey(event *eventsv1.Event) eventKey {
 	return key
 }
 
+//StartStructuredLogging将来自EventBroadcaster的events发送到structured logging function
 // StartStructuredLogging starts sending events received from this EventBroadcaster to the structured logging function.
 // The return value can be ignored or used to stop recording, if desired.
 func (e *eventBroadcasterImpl) StartStructuredLogging(verbosity klog.Level) func() {
@@ -304,6 +305,7 @@ func (e *eventBroadcasterImpl) StartStructuredLogging(verbosity klog.Level) func
 		})
 }
 
+//StartStructuredLogging将来自EventBroadcaster的events发送到event handler function
 // StartEventWatcher starts sending events received from this EventBroadcaster to the given event handler function.
 // The return value is used to stop recording
 func (e *eventBroadcasterImpl) StartEventWatcher(eventHandler func(event runtime.Object)) func() {

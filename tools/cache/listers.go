@@ -17,8 +17,6 @@ limitations under the License.
 package cache
 
 import (
-	"k8s.io/klog/v2"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,6 +49,7 @@ func ListAll(store Store, selector labels.Selector, appendFn AppendFunc) error {
 	return nil
 }
 
+//从indexer中列出属于namespace的items
 // ListAllByNamespace used to list items belongs to namespace from Indexer.
 func ListAllByNamespace(indexer Indexer, namespace string, selector labels.Selector, appendFn AppendFunc) error {
 	if namespace == metav1.NamespaceAll {

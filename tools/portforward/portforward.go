@@ -37,6 +37,7 @@ import (
 // TODO move to API machinery and re-unify with kubelet/server/portfoward
 const PortForwardProtocolV1Name = "portforward.k8s.io"
 
+//PortForwarder监听本地连接，并且将将请求通过HTTP request传送到remote pod
 // PortForwarder knows how to listen for local connections and forward them to
 // a remote pod via an upgraded HTTP request.
 type PortForwarder struct {
@@ -151,11 +152,13 @@ func parseAddresses(addressesToParse []string) ([]listenAddress, error) {
 	return addresses, nil
 }
 
+//使用localhost listen addresses创建PortForwarder
 // New creates a new PortForwarder with localhost listen addresses.
 func New(dialer httpstream.Dialer, ports []string, stopChan <-chan struct{}, readyChan chan struct{}, out, errOut io.Writer) (*PortForwarder, error) {
 	return NewOnAddresses(dialer, []string{"localhost"}, ports, stopChan, readyChan, out, errOut)
 }
 
+//使用custom listen addresses创建PortForwarder
 // NewOnAddresses creates a new PortForwarder with custom listen addresses.
 func NewOnAddresses(dialer httpstream.Dialer, addresses []string, ports []string, stopChan <-chan struct{}, readyChan chan struct{}, out, errOut io.Writer) (*PortForwarder, error) {
 	if len(addresses) == 0 {
