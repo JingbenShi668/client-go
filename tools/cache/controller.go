@@ -44,7 +44,7 @@ type Config struct {
 	Queue
 
 	// Something that can list and watch your objects.
-	ListerWatcher
+	ListerWatcher  //可以list并且watch你的objects
 
 	// Something that can process a popped Deltas.
 	Process ProcessFunc
@@ -58,6 +58,8 @@ type Config struct {
 	// FullResyncPeriod is the period at which ShouldResync is considered.
 	FullResyncPeriod time.Duration
 
+	//ShouldResync周期性地被reflector使用，用以决定是否同步queue
+	//如果ShouldResync的值为nil或者true，则意味着reflector进行queue的同步
 	// ShouldResync is periodically used by the reflector to determine
 	// whether to Resync the Queue. If ShouldResync is `nil` or
 	// returns true, it means the reflector should proceed with the
@@ -71,6 +73,7 @@ type Config struct {
 	//       now that this functionality appears at a higher level.
 	RetryOnError bool
 
+	//ListAndWatch报错，connection error
 	// Called whenever the ListAndWatch drops the connection with an error.
 	WatchErrorHandler WatchErrorHandler
 
@@ -94,9 +97,14 @@ type controller struct {
 	clock          clock.Clock
 }
 
+//这里的Controller是low-level controller，它由config进行parameterized，用在sharedIndexInformer中
 // Controller is a low-level controller that is parameterized by a
 // Config and used in sharedIndexInformer.
 type Controller interface {
+	//这个Controller做两件事情
+	//一件事情就是，构建并且运行Reflector从Config's ListerWatcher中获取objects/notifications，然后放到Config's Queue中
+	//并且kennel会偶尔触发Queue Resync
+	//另一件事情是，从Queue不断取出item，然后使用Config's ProcessFunc执行
 	// Run does two things.  One is to construct and run a Reflector
 	// to pump objects/notifications from the Config's ListerWatcher
 	// to the Config's Queue and possibly invoke the occasional Resync
@@ -113,7 +121,7 @@ type Controller interface {
 	LastSyncResourceVersion() string
 }
 
-// New makes a new Controller from the given Config.
+// New makes a new Controller from the given Config. //从给定配置创建新的Controller
 func New(c *Config) Controller {
 	ctlr := &controller{
 		config: *c,
@@ -156,6 +164,7 @@ func (c *controller) Run(stopCh <-chan struct{}) {
 	wg.Wait()
 }
 
+//一旦controller完成了initial resource listing，HasSynced()返回true
 // Returns true once this controller has completed an initial resource listing
 func (c *controller) HasSynced() bool {
 	return c.config.Queue.HasSynced()

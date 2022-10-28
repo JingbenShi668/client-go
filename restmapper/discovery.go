@@ -25,12 +25,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
-
-	"k8s.io/klog/v2"
 )
 
 // APIGroupResources is an API group with a mapping of versions to
 // resources.
+//APIGroupResources是一个API group, 其包含version到resource的映射
 type APIGroupResources struct {
 	Group metav1.APIGroup
 	// A mapping of version string to a slice of APIResources for
@@ -142,6 +141,7 @@ func NewDiscoveryRESTMapper(groupResources []*APIGroupResources) meta.RESTMapper
 	}
 }
 
+//GetAPIGroupResources使用provided discovery client去gather discovery information
 // GetAPIGroupResources uses the provided discovery client to gather
 // discovery information and populate a slice of APIGroupResources.
 func GetAPIGroupResources(cl discovery.DiscoveryInterface) ([]*APIGroupResources, error) {

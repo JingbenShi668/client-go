@@ -24,20 +24,22 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"k8s.io/klog/v2"
 	utiltrace "k8s.io/utils/trace"
 )
 
+//DeltaFIFOOptions是DeltaFIFO的配置参数，所有的configuration parameters都是optional
 // DeltaFIFOOptions is the configuration parameters for DeltaFIFO. All are
 // optional.
 type DeltaFIFOOptions struct {
 
+	//DeltaFIFO's KeyOf() method 返回KeyFunction
 	// KeyFunction is used to figure out what key an object should have. (It's
 	// exposed in the returned DeltaFIFO's KeyOf() method, with additional
 	// handling around deleted objects and queue state).
 	// Optional, the default is MetaNamespaceKeyFunc.
 	KeyFunction KeyFunc
 
+	//KnownObjects返回list of keys
 	// KnownObjects is expected to return a list of keys that the consumer of
 	// this queue "knows about". It is used to decide which items are missing
 	// when Replace() is called; 'Deleted' deltas are produced for the missing items.
@@ -150,6 +152,7 @@ const (
 	Sync DeltaType = "Sync"
 )
 
+//Delta是Deltas的一个成员，是存储在DeltaFIFO中的type
 // Delta is a member of Deltas (a list of Delta objects) which
 // in its turn is the type stored by a DeltaFIFO. It tells you what
 // change happened, and the object's state after* that change.

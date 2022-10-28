@@ -28,9 +28,9 @@ import (
 // Delete).
 //
 // There are three kinds of strings here:
-//  1. a storage key, as defined in the Store interface,
-//  2. a name of an index, and
-//  3. an "indexed value", which is produced by an IndexFunc and
+//  1. a storage key, as defined in the Store interface, //storage key，就像在Store interface中定义的那样
+//  2. a name of an index, and //index的name
+//  3. an "indexed value", which is produced by an IndexFunc and //index的值
 //     can be a field value or any other string computed from the object.
 type Indexer interface {
 	Store
@@ -38,12 +38,16 @@ type Indexer interface {
 	// intersects the set of indexed values of the given object, for
 	// the named index
 	Index(indexName string, obj interface{}) ([]interface{}, error)
+
+	//返回stored objects的keys，这些objects的keys的indexed value等于参数中的indexedValue
 	// IndexKeys returns the storage keys of the stored objects whose
 	// set of indexed values for the named index includes the given
 	// indexed value
 	IndexKeys(indexName, indexedValue string) ([]string, error)
+
 	// ListIndexFuncValues returns all the indexed values of the given index
 	ListIndexFuncValues(indexName string) []string
+
 	// ByIndex returns the stored objects whose set of indexed values
 	// for the named index includes the given indexed value
 	ByIndex(indexName, indexedValue string) ([]interface{}, error)

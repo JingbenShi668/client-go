@@ -24,6 +24,7 @@ import (
 // GroupName is the group name use in this package
 const GroupName = "client.authentication.k8s.io"
 
+//SchemeGroupVersion适用于注册objects的group version
 // SchemeGroupVersion is group version used to register these objects
 var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: runtime.APIVersionInternal}
 

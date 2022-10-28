@@ -47,7 +47,7 @@ type eventInformer struct {
 }
 
 // NewEventInformer constructs a new informer for Event type.
-
+//更推荐使用informer factory去获取a shared informer, 这将会减少内存占用，以及减少api server的连接数量
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
 func NewEventInformer(client kubernetes.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
