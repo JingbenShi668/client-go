@@ -31,7 +31,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
-	"k8s.io/klog/v2"
 )
 
 func buildConfig(kubeconfig string) (*rest.Config, error) {
@@ -94,6 +93,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	//监听到Linux SIGTERM signal之后，结束context
 	// listen for interrupts or the Linux SIGTERM signal and cancel
 	// our context, which the leader election code will observe and
 	// step down
@@ -118,7 +118,7 @@ func main() {
 		},
 	}
 
-	// start the leader election code loop
+	// start the leader election code loop //开始执行leader election loop
 	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
 		Lock: lock,
 		// IMPORTANT: you MUST ensure that any code you have that
@@ -148,7 +148,7 @@ func main() {
 					// I just got the lock
 					return
 				}
-				klog.Infof("new leader elected: %s", identity)
+				klog.Infof("new leader elected: %s", identity) //leader election完成
 			},
 		},
 	})

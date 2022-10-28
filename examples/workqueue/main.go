@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/klog/v2"
-
 	v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -34,6 +32,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
+//如何使用client-go实现一个controller
 // Controller demonstrates how to implement a controller with client-go.
 type Controller struct {
 	indexer  cache.Indexer
@@ -68,6 +67,7 @@ func (c *Controller) processNextItem() bool {
 	return true
 }
 
+//controller的business logic,用于打印pod的stdout信息
 // syncToStdout is the business logic of the controller. In this controller it simply prints
 // information about the pod to stdout. In case an error happened, it has to simply return the error.
 // The retry logic should not be part of the business logic.
@@ -89,6 +89,7 @@ func (c *Controller) syncToStdout(key string) error {
 	return nil
 }
 
+//如果发生了error, handleErr将再次尝试
 // handleErr checks if an error happened and makes sure we will retry later.
 func (c *Controller) handleErr(err error, key interface{}) {
 	if err == nil {
@@ -167,9 +168,10 @@ func main() {
 	// create the pod watcher
 	podListWatcher := cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceDefault, fields.Everything())
 
-	// create the workqueue
+	// create the workqueue //构建NewRateLimitingQueue队列
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
+	//在informer的帮助下将workqueue与cache绑定
 	// Bind the workqueue to a cache with the help of an informer. This way we make sure that
 	// whenever the cache is updated, the pod key is added to the workqueue.
 	// Note that when we finally process the item from the workqueue, we might see a newer version
@@ -213,7 +215,7 @@ func main() {
 	// Now let's start the controller
 	stop := make(chan struct{})
 	defer close(stop)
-	go controller.Run(1, stop)
+	go controller.Run(1, stop) //启动controller
 
 	// Wait forever
 	select {}

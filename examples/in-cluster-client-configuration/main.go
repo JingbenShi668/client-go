@@ -48,6 +48,7 @@ func main() {
 		panic(err.Error())
 	}
 	for {
+		//get(指定namaspacee或者不指定namespace)下的pods
 		// get pods in all the namespaces by omitting namespace
 		// Or specify namespace to get pods in particular namespace
 		pods, err := clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{})
