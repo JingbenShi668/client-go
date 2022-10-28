@@ -241,6 +241,8 @@ func (le *LeaderElector) IsLeader() bool {
 	return le.getObservedRecord().HolderIdentity == le.config.Lock.Identity()
 }
 
+//一旦获取到leadership, 立即返回true；否则会间隔RetryPeriod尝试获取leadership
+//一旦ctx signals done, 返回false
 // acquire loops calling tryAcquireOrRenew and returns true immediately when tryAcquireOrRenew succeeds.
 // Returns false if ctx signals done.
 func (le *LeaderElector) acquire(ctx context.Context) bool {
@@ -251,12 +253,13 @@ func (le *LeaderElector) acquire(ctx context.Context) bool {
 	klog.Infof("attempting to acquire leader lease %v...", desc)
 	wait.JitterUntil(func() {
 		succeeded = le.tryAcquireOrRenew(ctx)
+		//有可能产生新的leader，所以使用maybeReportTransition检查是否需要广播新的leader产生
 		le.maybeReportTransition()
 		if !succeeded {
-			klog.V(4).Infof("failed to acquire lease %v", desc)
+			klog.V(4).Infof("failed to acquire lease %v", desc) //获取leadership失败
 			return
 		}
-		le.config.Lock.RecordEvent("became leader")
+		le.config.Lock.RecordEvent("became leader") //自己成为leader
 		le.metrics.leaderOn(le.config.Name)
 		klog.Infof("successfully acquired lease %v", desc)
 		cancel()
@@ -269,6 +272,8 @@ func (le *LeaderElector) renew(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	wait.Until(func() {
+		//间隔RetryPeriod时间会通过tryAcquireOrRenew续约，如果续约失败，会再次尝试
+		//尝试的总时间达到RenewDeadline，则该client会失去leadership资格
 		timeoutCtx, timeoutCancel := context.WithTimeout(ctx, le.config.RenewDeadline)
 		defer timeoutCancel()
 		err := wait.PollImmediateUntil(le.config.RetryPeriod, func() (bool, error) {
@@ -314,6 +319,8 @@ func (le *LeaderElector) release() bool {
 	return true
 }
 
+//如果client没有获得leadership则尝试获取，如果该client已经获取到了leadership,则尝试更新
+//两种情形下成功则返回true,失败返回false
 // tryAcquireOrRenew tries to acquire a leader lease if it is not already acquired,
 // else it tries to renew the lease if it has already been acquired. Returns true
 // on success else returns false.
@@ -327,9 +334,11 @@ func (le *LeaderElector) tryAcquireOrRenew(ctx context.Context) bool {
 	}
 
 	// 1. obtain or create the ElectionRecord
+	//从client端获得ElectionRecord
 	oldLeaderElectionRecord, oldLeaderElectionRawRecord, err := le.config.Lock.Get(ctx)
 	if err != nil {
 		if !errors.IsNotFound(err) {
+			//获取资源失败，直接退出
 			klog.Errorf("error retrieving resource lock %v: %v", le.config.Lock.Describe(), err)
 			return false
 		}
@@ -344,11 +353,16 @@ func (le *LeaderElector) tryAcquireOrRenew(ctx context.Context) bool {
 	}
 
 	// 2. Record obtained, check the Identity & Time
+	//从远端成功获取record(资源)后存到oldLeaderElectionRawRecord
+	//如果oldLeaderElectionRawRecord与observedRawRecord不相同，则更新observedRawRecord
+	//observedRawRecord代表的是远端存在record
+
 	if !bytes.Equal(le.observedRawRecord, oldLeaderElectionRawRecord) {
 		le.setObservedRecord(oldLeaderElectionRecord)
 
 		le.observedRawRecord = oldLeaderElectionRawRecord
 	}
+	//如果leader已经被占有，但不是当前自己的client，虽然时间还没有到期，但也直接返回false
 	if len(oldLeaderElectionRecord.HolderIdentity) > 0 &&
 		le.observedTime.Add(le.config.LeaseDuration).After(now.Time) &&
 		!le.IsLeader() {
@@ -358,14 +372,15 @@ func (le *LeaderElector) tryAcquireOrRenew(ctx context.Context) bool {
 
 	// 3. We're going to try to update. The leaderElectionRecord is set to it's default
 	// here. Let's correct it before updating.
-	if le.IsLeader() {
+	if le.IsLeader() {//当前client就是leader
 		leaderElectionRecord.AcquireTime = oldLeaderElectionRecord.AcquireTime
 		leaderElectionRecord.LeaderTransitions = oldLeaderElectionRecord.LeaderTransitions
-	} else {
+	} else { //当前client不是leader
 		leaderElectionRecord.LeaderTransitions = oldLeaderElectionRecord.LeaderTransitions + 1
 	}
 
 	// update the lock itself
+	//当前client已经占有资源，成为leader
 	if err = le.config.Lock.Update(ctx, leaderElectionRecord); err != nil {
 		klog.Errorf("Failed to update lock: %v", err)
 		return false
