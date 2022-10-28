@@ -32,6 +32,7 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
+//MutatingWebhookConfigurationInformer为MutatingWebhookConfigurations提供informer和lister的访问
 // MutatingWebhookConfigurationInformer provides access to a shared informer and lister for
 // MutatingWebhookConfigurations.
 type MutatingWebhookConfigurationInformer interface {
@@ -44,7 +45,10 @@ type mutatingWebhookConfigurationInformer struct {
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 }
 
+//NewMutatingWebhookConfigurationInformer针对MutatingWebhookConfiguration构建了一个新的informer
 // NewMutatingWebhookConfigurationInformer constructs a new informer for MutatingWebhookConfiguration type.
+//推荐使用informer factory获取一个shared informer而不是单独获取independent shared informer
+//这样可以减少内存开销，以及server连接次数
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
 func NewMutatingWebhookConfigurationInformer(client kubernetes.Interface, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {

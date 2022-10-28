@@ -98,6 +98,7 @@ func main() {
 		},
 	}
 
+	//创建Deployment
 	// Create Deployment
 	fmt.Println("Creating deployment...")
 	result, err := deploymentsClient.Create(context.TODO(), deployment, metav1.CreateOptions{})
@@ -106,6 +107,7 @@ func main() {
 	}
 	fmt.Printf("Created deployment %q.\n", result.GetObjectMeta().GetName())
 
+	//更新Deployment
 	// Update Deployment
 	prompt()
 	fmt.Println("Updating deployment...")
@@ -121,6 +123,11 @@ func main() {
 	//
 	// More Info:
 	// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+	// 1、修改deployment variable, 然后调用Update(deployment)
+	//这种方法类似kubectl replace命令，并且它会覆盖/丢失 你在Create() 和 Update()过程中间其他客户端的修改
+	//2、修改Get()返回的result，然后Update(result)
+	//这种方法下，你可以保存Create() 和 Update()过程中间其他客户端的修改
+	//这种方法是基于client-go的retry utility package实现的，这也是RECOMMENDED的Deployment Update()方式
 
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// Retrieve the latest version of Deployment before attempting update
