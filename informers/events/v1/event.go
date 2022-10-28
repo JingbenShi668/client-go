@@ -32,6 +32,7 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
+//EventInformer可访问shared informer and lister
 // EventInformer provides access to a shared informer and lister for
 // Events.
 type EventInformer interface {
@@ -46,6 +47,7 @@ type eventInformer struct {
 }
 
 // NewEventInformer constructs a new informer for Event type.
+
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
 func NewEventInformer(client kubernetes.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
